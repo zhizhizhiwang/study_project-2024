@@ -5,7 +5,7 @@
 0. 主方向：数学 数列 + ...
 ### 可视化  
 1. 用户界面，参考acwing saber设计  
-![参考图](https://cdn.jsdelivr.net/gh/zhizhizhiwang/image_hub@image/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202024-06-21%20221231.png)
+![参考](https://cdn.jsdelivr.net/gh/zhizhizhiwang/image_hub@image/202406212259911.png)
 2. 公式模拟  
 
 ### 内容  
