@@ -1,5 +1,5 @@
 # study_project-2024
-一个基于pygame的学习辅助程序
+一个基于pyQt6的学习辅助程序
 
 ## TODO  
     主方向：数学 数列 + ...
