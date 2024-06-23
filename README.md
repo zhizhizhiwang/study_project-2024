@@ -1,6 +1,8 @@
 # study_project-2024
 一个基于pyQt6的学习辅助程序
 
+![](https://raw.githubusercontent.com/zhizhizhiwang/image_hub/image/202406231523415.jpg)
+
 ## TODO  
     主方向：数学 数列 + ...
 ### 可视化  
