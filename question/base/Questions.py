@@ -10,9 +10,9 @@ class Problems(object):
     solution: str
     analysis: str
     other_information: Any
-    handling: Callable | None
+    handling: Callable
 
-    def __init__(self, surface: str, solution: str, analysis: str, other_info: Any = None, handling: Callable | None = None):
+    def __init__(self, surface: str, solution: str, analysis: str, other_info: Any = None, handling: Callable = None):
         """
         :param surface: 题面
         :param solution: 题目答案
