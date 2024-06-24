@@ -1,5 +1,5 @@
 # study_project-2024
-一个基于pyQt6的面向高中数学数列学习的题目方向提取与分析程序
+一个基于pyQt6的面向高中数学数列学习的题目方向提取与分析程序 
 
 ![](https://raw.githubusercontent.com/zhizhizhiwang/image_hub/image/202406231523415.jpg)
 
