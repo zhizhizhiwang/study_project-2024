@@ -1,4 +1,4 @@
-fron 通义千问2.5 point at TODO.识别.2 区分文字与公式  
+来自 通义千问2.5 point at TODO.识别.2 区分文字与公式  
 Q:请给出关于上文pyTorch-OCR区分公式与文字的更多介绍    
 A:  
 `PyTorch-OCR` 是一个基于 PyTorch 的开源 OCR（Optical Character Recognition）框架，它主要用于识别图像中的文字内容。尽管它的主要目标是文本识别，但通过适当的调整和定制，这个框架也可以被应用于区分图像中的公式和文字。以下是几个关键点，说明如何利用或扩展 `PyTorch-OCR` 来实现这一目标：
