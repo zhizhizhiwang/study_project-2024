@@ -38,10 +38,12 @@ formula_blocks = []
 
 
 for contour in contours:
+    print(contour)
     # 计算轮廓的边界框
     x, y, w, h = cv2.boundingRect(contour)
 
     # 根据轮廓大小过滤掉小轮廓
+
     if w > 10 and h > 30:  # 调整大小阈值以适应具体情况
         roi = image[y:y + h, x:x + w]
 
@@ -55,6 +57,7 @@ for contour in contours:
         else:
             text_blocks.append(text)
             cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)  # 绿色框用于文本
+
 
 # 显示结果图像
 cv2.imshow('Detected Text and Formulas', image)
