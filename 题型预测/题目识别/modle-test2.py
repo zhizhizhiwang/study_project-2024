@@ -28,8 +28,10 @@ for contour in contours:
     # 使用OCR识别文本
     text = pytesseract.image_to_string(roi, config='--psm 6', lang='chi_sim+eng')
 
+    print(text, end=' ')
+
     # 简单判断是否是公式（可以改进）
-    if any(char.isdigit() for char in text) or any(char in '+-*/=()' for char in text):
+    if any(char.isdigit() for char in text) or any(char in '_{}+-*/=()' for char in text):
         formula_blocks.append(text)
         cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), 2)  # 红色框用于公式
     else:
@@ -42,7 +44,7 @@ cv2.destroyAllWindows()
 
 # 输出结果
 print("文本部分：")
-print("\n".join(text_blocks))
+print(" ".join(text_blocks))
 
 print("公式部分：")
-print("\n".join(formula_blocks))
+print(" ".join(formula_blocks))
