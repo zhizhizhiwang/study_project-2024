@@ -1,4 +1,4 @@
-# form gpt-4o
+# from gpt-4o
 # 这个不能用
 
 import cv2
