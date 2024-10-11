@@ -88,7 +88,7 @@ for contour in contours:
 
 
 # 合并
-def merge_rectangles(rectangles, y_tolerance=20, h_tolerance=50):
+def merge_rectangles(rectangles, y_tolerance=50, h_tolerance=50):
     # 按 y 坐标和 x 坐标排序
     rectangles.sort(key=lambda rect: (rect[1], rect[0]))
 
@@ -102,7 +102,7 @@ def merge_rectangles(rectangles, y_tolerance=20, h_tolerance=50):
             # 检查 y 坐标和高度是否相近
             if (abs(last[1] - rect[1]) <= y_tolerance) and \
                     (abs(last[3] - rect[3]) <= h_tolerance) and \
-                    (last[0] <= rect[0] - rect[2] <= last[0] + last[2] or rect[0] <= last[0] <= rect[0] + rect[2]):
+                    (last[0] <= rect[0] - last[2] <= last[0] + last[2] or rect[0] <= last[0] <= rect[0] + rect[2]):
                 # 合并
                 new_x = min(last[0], rect[0])
                 new_y = last[1]
