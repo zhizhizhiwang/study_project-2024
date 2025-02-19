@@ -122,7 +122,7 @@ class MplCanvas(FigureCanvas):
             if x is not None and y is not None:
                 index = (numpy.abs(self.x - x)).argmin()
                 self.annot.xy = (self.x[index], self.y[index])
-                self.annot.set_text(f'({self.x[index]:.2f}, {self.y[index]:.2f})')
+                self.annot.set_text(f'n : {self.x[index]}\na[n] : {self.y[index]}')
                 self.annot.set_visible(True)
                 self.draw()
         else:
