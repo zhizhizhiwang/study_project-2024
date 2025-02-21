@@ -1,28 +1,33 @@
-from typing import Any
-from typing import Callable
+import json
 
 
-class Problems(object):
+class Problem(object):
     """
     储存一道题目的数据
     """
-    surface: str
-    solution: str
-    analysis: str
-    other_information: Any
-    handling: Callable
+    surface: str | None
+    solution: str | None
+    analysis: str | None
 
-    def __init__(self, surface: str, solution: str, analysis: str, other_info: Any = None, handling: Callable = None):
+    def __init__(self, surface: str = "", answer: str | None = None, analysis: str | None = None):
         """
         :param surface: 题面
-        :param solution: 题目答案
+        :param answer: 题目答案
         :param analysis: 题目解析
-        :param other_info : 其他信息，默认为None
-        :param handling : 如何呈现提供的其他信息，为None则不显示
         """
         self.surface = surface
-        self.solution = solution
+        self.answer = answer
         self.analysis = analysis
-        self.other_information = other_info
-        self.handling = handling
         return
+
+    def unpack(self):
+        return self.surface, self.answer, self.analysis
+
+    def load_from_file(self, file_name: str):
+        with open(file_name, "r", encoding='utf8') as file:
+            d = json.load(file)
+            self.surface, self.answer, self.analysis = ('\n\n'.join(d['surface']), d['answer'], d['analysis'])
+        return self
+
+
+example_question = Problem().load_from_file(r"C:\Users\xpwan\Desktop\study_project-2024\question\example_question.json")

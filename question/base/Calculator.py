@@ -148,7 +148,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #输入框
         self.lineEdit = QtWidgets.QLineEdit(central_widget)
         self.lineEdit.setGeometry(QtCore.QRect(20, 10, 560, 100))
-        self.lineEdit.setObjectName("lineEdit")
+        self.lineEdit.setObjectName("answer_input")
         self.lineEdit.setText("a[n-1] + a[n-2]")
         h_layout.addWidget(self.lineEdit)
 
