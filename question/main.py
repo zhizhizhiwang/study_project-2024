@@ -29,7 +29,7 @@ def convert_to_html(md_text):
         <script>
         MathJax = {{
             tex: {{
-                inlineMath: [['\\(', '\\)'], ['$', '$']],
+                inlineMath: [['\\(', '\\)']],
                 displayMath: [['\\[', '\\]']],
                 processEscapes: true
             }},
@@ -92,6 +92,8 @@ class HomeWindow(QtWidgets.QMainWindow):
         self.tableView.setObjectName("tableView")
         self.show_layout_h.addWidget(self.tableView, 1)
 
+        self.tableView.hide()
+
         self.show_layout_h.setStretch(0, 3)
         self.show_layout_h.setStretch(1, 1)
 
@@ -147,6 +149,7 @@ class HomeWindow(QtWidgets.QMainWindow):
         else:
             logger.debug("在未加载问题时提交答案")
             self.statusbar.showMessage("未加载问题", 1000)
+
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)

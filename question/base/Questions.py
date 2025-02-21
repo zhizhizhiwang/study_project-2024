@@ -1,4 +1,8 @@
 import json
+import logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(format='%(levelname)s:%(message)s')
+logger.setLevel(logging.DEBUG)
 
 
 class Problem(object):
@@ -26,7 +30,11 @@ class Problem(object):
     def load_from_file(self, file_name: str):
         with open(file_name, "r", encoding='utf8') as file:
             d = json.load(file)
-            self.surface, self.answer, self.analysis = ('\n\n'.join(d['surface']), d['answer'], d['analysis'])
+            try:
+                self.surface, self.answer, self.analysis = ('\n\n'.join(d['surface']), d['answer'], d['analysis'])
+            except KeyError as e:
+                logger.error("加载题目文件失败", e)
+                return None
         return self
 
 
