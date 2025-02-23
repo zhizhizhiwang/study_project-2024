@@ -38,7 +38,7 @@ class Ui_MainWindow(object):
         self.lineEdit_4.setObjectName("question_show")
         self.horizontalLayout_4.addWidget(self.lineEdit_4, 0, QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignTop)
         self.tableView = QtWidgets.QTableView(parent=self.verticalLayoutWidget)
-        self.tableView.setObjectName("tableView")
+        self.tableView.setObjectName("rightBar")
         self.horizontalLayout_4.addWidget(self.tableView)
         self.horizontalLayout_4.setStretch(0, 3)
         self.horizontalLayout_4.setStretch(1, 1)

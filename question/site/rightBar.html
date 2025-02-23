@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zhcn">
+<head>
+    <meta charset="UTF-8">
+    <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+    <title>bar</title>
+</head>
+<body>
+    <h3>题目详情</h3>
+    <b>标签</b> <span>[replaced-tags]</span>
+    <h3>推荐题目</h3>
+    <ul>
+        <li><a href="[replaced-site1]" onclick="handleClick(event)">[replaced-site1-title]</a></li>
+        <li><a href="[replaced-site2]" onclick="handleClick(event)">[replaced-site2-title]</a></li>
+        <li><a href="[replaced-site3]" onclick="handleClick(event)">[replaced-site3-title]</a></li>
+        <li><a href="[replaced-site4]" onclick="handleClick(event)">[replaced-site4-title]</a></li>
+        <li><a href="[replaced-site5]" onclick="handleClick(event)">[replaced-site5-title]</a></li>
+    </ul>
+    <script>
+        // 初始化WebChannel
+        document.addEventListener('DOMContentLoaded', function() {
+            new QWebChannel(qt.webChannelTransport, function(channel) {
+                window.bridge = channel.objects.bridge;
+            });
+        });
+
+        // 点击处理函数
+        function handleClick(event) {
+            event.preventDefault();
+            const tag = event.target.getAttribute('href');
+            window.bridge.handle_tag(tag);
+        }
+     </script>
+</body>
+</html>

@@ -1,13 +1,23 @@
 import sys
-from PyQt6 import QtCore, QtWidgets, QtGui
+import os
+from PyQt6 import QtCore, QtWidgets, QtGui, QtWebChannel
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 import markdown
-from base import Questions, Calculator
+from base import Questions, Calculator, RightBarWeb
 import logging
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(levelname)s:%(message)s')
-logger.setLevel(logging.DEBUG)
+
+DEBUG = -1
+RELEASE = 0
+
+status = -1
+
+if status == DEBUG:
+    logger.setLevel(logging.DEBUG)
+elif status == RELEASE:
+    logger.setLevel(logging.INFO)
 
 
 def convert_to_html(md_text):
@@ -65,6 +75,9 @@ class HomeWindow(QtWidgets.QMainWindow):
 
     def __init__(self):
         super().__init__()  # 调用父类的__init__
+
+        self.calculator = Calculator.MainWindow()
+
         self.setWindowTitle("Home Page")
         self.setObjectName("MainWindow")
         self.resize(803, 598)
@@ -88,11 +101,20 @@ class HomeWindow(QtWidgets.QMainWindow):
         self.show_layout_h.addWidget(self.question_show, 3,
                                      QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignTop)
 
-        self.tableView = QtWidgets.QTableView(parent=self.verticalLayoutWidget)
-        self.tableView.setObjectName("tableView")
-        self.show_layout_h.addWidget(self.tableView, 1)
+        """右侧栏目相关"""
+        self.rightBar = QWebEngineView()
+        self.bridge = RightBarWeb.Bridge()
+        self.bridge.view = self.rightBar
+        self.bridge.main_question_connect = self.load_question
 
-        self.tableView.hide()
+        self.channel = QtWebChannel.QWebChannel()
+        self.channel.registerObject('bridge', self.bridge)  # 注册对象到JavaScript
+        self.rightBar.page().setWebChannel(self.channel)
+
+        self.rightBar.setHtml(open(r"question/site/rightBar.html", "r", encoding="utf-8").read())
+        self.rightBar.setObjectName("rightBar")
+        self.show_layout_h.addWidget(self.rightBar, 1)
+        """----------------------------------------------------"""
 
         self.show_layout_h.setStretch(0, 3)
         self.show_layout_h.setStretch(1, 1)
@@ -130,15 +152,35 @@ class HomeWindow(QtWidgets.QMainWindow):
         self.question_analysis = None
         self.set_content("欢迎使用")
 
+        """菜单"""
+        self.debug_control = self.menubar.addMenu("debug")
+        self.right_bar_action = QtGui.QAction("切换右侧栏状态")
+        self.right_bar_action.setStatusTip("切换右侧栏状态")
+        self.right_bar_action.triggered.connect(self.change_right_bar_action)
+        self.debug_control.addAction(self.right_bar_action)
+
+        self.open_question = QtGui.QAction("从文件加载题目")
+        self.open_question.triggered.connect(self.open_question_from_file)
+        self.debug_control.addAction(self.open_question)
+
+        self.open_calculator = QtGui.QAction("打开数列计算器")
+        self.open_calculator.triggered.connect(self.calculator.show)
+
+        self.menubar.addAction(self.open_calculator)
+
     def set_content(self, md_text):
         """更新显示内容"""
         html = convert_to_html(md_text)
         self.question_show.setHtml(html)
 
-    def load_question(self, question: Questions.Problem):
-        print(question.surface)
-        self.set_content(question.surface)
-        _, self.question_answer, self.question_analysis = question.unpack()
+    def load_question(self, filename : str):
+        try:
+            question = Questions.Question().load_from_file(filename)
+            print(question.surface)
+            self.set_content(question.surface)
+            _, self.question_answer, self.question_analysis = question.unpack()
+        except Exception as e:
+            logger.error(f"加载题目文件失败{e}")
 
     def check_answer(self):
         if self.question_answer is not None:
@@ -147,13 +189,36 @@ class HomeWindow(QtWidgets.QMainWindow):
             else:
                 self.statusbar.showMessage("回答错误", 2000)
         else:
-            logger.debug("在未加载问题时提交答案")
+            logger.warning("在未加载问题时提交答案")
             self.statusbar.showMessage("未加载问题", 1000)
+
+    def change_right_bar_action(self):
+        if self.rightBar.isVisible():
+            self.rightBar.hide()
+        else:
+            self.rightBar.show()
+
+    def open_question_from_file(self):
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "选择题目json文件", os.path.abspath('.'), "Json文件 (*.json)")
+        if filename:
+            self.load_question(filename)
+        else:
+            logger.error(f"加载题目失败, 选择了{filename}, {_}")
+
+    def rightBar_url_change(self, url : QtCore.QUrl):
+        site = url.toString()
+        logger.debug(f"url: {site}")
+        try:
+            question = Questions.Question().load_from_file(site)
+        except Exception as e:
+            logger.error("无法读取文件", e)
+            self.rightBar.setHtml(open(r"./site/404.html", "r", encoding="utf-8").read().replace("[replaced-error-str]", e.__repr__()))
+
 
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = HomeWindow()
     window.show()
-    window.load_question(Questions.example_question)
+    window.load_question(r"question/example_question.json")
     sys.exit(app.exec())
