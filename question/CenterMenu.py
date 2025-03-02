@@ -4,10 +4,10 @@ from PyQt6.QtCore import Qt, QObject, pyqtSlot, pyqtSignal, QTimer
 from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QTabWidget, QSizePolicy
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtWebChannel import QWebChannel
-import Questions
+from question.base import Questions, question_show
 
 try:
-    d3_js = open("d3.v7.min.js", "r", encoding="utf-8").read()
+    d3_js = open("question/base/d3.v7.min.js", "r", encoding="utf-8").read()
 except FileNotFoundError as e:
     print(f"file not found cwd:{os.getcwd()}")
     raise e
@@ -19,7 +19,7 @@ logger.setLevel(logging.DEBUG)
 
 class NodeData(QObject):
     updateGraph = pyqtSignal(str)
-    positionChanged = pyqtSignal(str)  # 新增位置变化信号
+    positionChanged = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
@@ -37,13 +37,6 @@ class NodeData(QObject):
         self.upper : GraphWindow | None = None
         self._alive = True  # 新增存活标记
 
-    def __del__(self):
-        self._alive = False
-
-    @pyqtSlot()
-    def check_alive(self):
-        return self._alive
-
     @pyqtSlot(str)
     def handleNodeClick(self, tag : str):
         logger.debug(f"Node clicked! Tag: {tag}")
@@ -54,6 +47,9 @@ class NodeData(QObject):
         elif opt[0] == "exit":
             self.clear()
             self.upper.send_initial_data()
+        else:
+            new_window = question_show.HomeWindow(self.upper, tag)
+            new_window.show()
 
         self.refresh_graph()
 
@@ -87,7 +83,7 @@ class NodeData(QObject):
         self.links.clear()
 
     def add_node(self, name : str, tag : str):
-        self.nodes.append({"id" : f"id_{name}", "tag" : tag, "name" : name, "x": 600, "y": 400})
+        self.nodes.append({"id" : f"id_{tag}", "tag" : tag, "name" : name, "x": 600, "y": 400})
         self.node_names.append(name)
 
     def has_added(self, name : str):
@@ -100,7 +96,7 @@ class NodeData(QObject):
 class GraphWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Interactive Graph with Dragging")
+        self.setWindowTitle("目录")
         self.setGeometry(100, 100, 1200, 800)
         self.channel = QWebChannel()
 
@@ -148,7 +144,7 @@ class GraphWindow(QMainWindow):
         for tag in all_tags:
             self.node_data.add_node(tag, f"menu::{tag}")
             if tag0 is not None:
-                self.node_data.add_link(tag0, tag)
+                self.node_data.add_link(f"menu::{tag0}", f"menu::{tag}")
             tag0 = tag
 
         self.node_data.updateGraph.emit(json.dumps({
@@ -164,11 +160,12 @@ class GraphWindow(QMainWindow):
 
         q1 = Questions.Question()
         q1.question_id = "exit"
+        q1.surface = "exit                 "
         for q in same_tag_list:
-            self.node_data.add_node(q1.question_id, q1.question_id)
+            self.node_data.add_node(q1.surface[0:min(len(q1.surface), 5)], q1.question_id)
             self.node_data.add_link(q1.question_id, q.question_id)
             q1 = q
-        self.node_data.add_node(q1.question_id, q1.question_id)
+        self.node_data.add_node(q1.surface[0:min(len(q1.surface), 5)], q1.question_id)
 
     def init_webchannel(self):
         """ 窗口尺寸变化时通知前端 """
@@ -278,7 +275,6 @@ class GraphWindow(QMainWindow):
                     checkInit();
                 }} else {{
                     console.error('D3.js未加载！');
-                    // 可在此处动态加载D3作为备选方案
                 }}
                 function checkInit() {{
                     console.log('检查初始化状态，webChannelLoaded:', webChannelLoaded, 'd3Loaded:', d3Loaded);

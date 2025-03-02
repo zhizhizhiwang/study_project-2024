@@ -3,7 +3,7 @@ import os
 from PyQt6 import QtCore, QtWidgets, QtGui, QtWebChannel
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 import markdown
-from question.base import Questions, Calculator, RightBarWeb, CenterMenu
+from question.base import Questions, Calculator, RightBarWeb
 import logging
 from functools import singledispatch
 
@@ -74,12 +74,12 @@ class HomeWindow(QtWidgets.QMainWindow):
     question_answer: str | None
     question_analysis: str | None
 
-    def __init__(self):
-        super().__init__()  # 调用父类的__init__
+    def __init__(self, parent : QtWidgets.QMainWindow ,file_name : str | None = None):
+        super().__init__(parent)  # 调用父类的__init__
 
         self.calculator = Calculator.MainWindow()
 
-        self.setWindowTitle("Home Page")
+        self.setWindowTitle("练习")
         self.setObjectName("MainWindow")
         self.resize(803, 598)
         self.centralwidget = QtWidgets.QWidget()
@@ -158,7 +158,7 @@ class HomeWindow(QtWidgets.QMainWindow):
         self.set_content("欢迎使用")
 
         """菜单"""
-        self.debug_control = self.menubar.addMenu("debug")
+        self.debug_control = self.menubar.addMenu("其他功能")
         self.right_bar_action = QtGui.QAction("切换右侧栏状态")
         self.right_bar_action.setStatusTip("切换右侧栏状态")
         self.right_bar_action.triggered.connect(self.change_right_bar_action)
@@ -174,6 +174,9 @@ class HomeWindow(QtWidgets.QMainWindow):
         self.menubar.addAction(self.open_calculator)
         self.setCentralWidget(self.centralwidget)
 
+        if file_name is not None:
+            self.bridge.handle_tag(file_name)
+
     def set_content(self, md_text):
         """更新显示内容"""
         html = convert_to_html(md_text)
@@ -183,17 +186,29 @@ class HomeWindow(QtWidgets.QMainWindow):
         if isinstance(filename, int):
             question_input = self.question_lib[filename]
             print(question_input.surface)
-            self.set_content(question_input.surface)
+            self.set_content(question_input.surface + "\n\n" + " ".join(question_input.options))
             _, _, self.question_answer, self.question_analysis, self.question_tags = question_input.unpack()
+            same_tag_list : list[Questions.Question] = []
+            for tag in question_input.tags:
+                same_tag_list += [q for _, q in self.question_lib.questions_dir.values() if tag in q.tags and q.question_id != question_input.question_id]
+            for i in range(min(5, len(same_tag_list))):
+                self.bridge.question_list[i + 1] = [str(same_tag_list[i].question_id), " ".join(same_tag_list[i].tags)]
+
         elif isinstance(filename, str):
             try:
                 question_input = Questions.Question().load_from_file(filename)
-                print(question_input.surface)
-                self.set_content(question_input.surface)
-                _, _, self.question_answer, self.question_analysis, self.question_tags = question_input.unpack()
             except Exception as e:
                 logger.error(f"加载题目文件失败{e}")
                 logger.error(f"当前目录{os.getcwd()}")
+                raise e
+            print(question_input.surface)
+            self.set_content(question_input.surface + "\n\n" + " \n\n ".join(question_input.options))
+            _, _, self.question_answer, self.question_analysis, self.question_tags = question_input.unpack()
+            same_tag_list: list[Questions.Question] = []
+            for tag in question_input.tags:
+                same_tag_list += [q for _, q in self.question_lib.questions_dir.values() if tag in q.tags and q.question_id != question_input.question_id]
+            for i in range(min(5, len(same_tag_list))):
+                self.bridge.question_list[i + 1] = [str(same_tag_list[i].question_id), " ".join(same_tag_list[i].tags)]
         else:
             logger.error("load_question参数不匹配")
 
@@ -230,7 +245,7 @@ class HomeWindow(QtWidgets.QMainWindow):
             self.rightBar.show()
 
     def open_question_from_file(self):
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "选择题目json文件", os.path.abspath('.'), "Json文件 (*.json)")
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "选择题目json文件", os.path.abspath('..'), "Json文件 (*.json)")
         if filename:
             self.load_question(filename)
         else:
@@ -243,7 +258,7 @@ class HomeWindow(QtWidgets.QMainWindow):
             question = Questions.Question().load_from_file(site)
         except Exception as e:
             logger.error("无法读取文件", e)
-            self.rightBar.setHtml(open(r"./site/404.html", "r", encoding="utf-8").read().replace("[replaced-error-str]", e.__repr__()))
+            self.rightBar.setHtml(open(r"../site/404.html", "r", encoding="utf-8").read().replace("[replaced-error-str]", e.__repr__()))
 
 
 if __name__ == "__main__":

@@ -5,27 +5,38 @@ from PyQt6.QtWidgets import QApplication, QMainWindow
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtWebChannel import QWebChannel
 
-
-
 # 用于通信的QObject子类
+logger = logging.getLogger(__name__)
+logging.basicConfig(format='%(levelname)s:%(message)s')
+logger.setLevel(logging.DEBUG)
+
+
 class Bridge(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.view : QWebEngineView | None = None  # 用于保存WebEngineView的引用
         self.question_list : dict[int : tuple[str, str]] = {1 : ("1", "1"), 2 : ("2", "2"), 3 : ("3", "3"), 4 : ("4", "4"), 5 : ("5", "5")}
         self.main_question_connect = None
+        self.get_tag = None
         self.base_html = open(r"question\site\rightBar.html", "r", encoding="utf-8").read()
 
     @pyqtSlot(str)
     def handle_tag(self, tag):
         """处理来自JavaScript的标签"""
-        logging.debug(f"Received tag: {tag}")
+        logger.debug(f"Received tag: {tag}")
 
         # 根据不同的tag生成不同内容
         assert self.view is not None
         assert callable(self.main_question_connect)
+        assert callable(self.get_tag)
+        tags = []
+        try:
+            self.main_question_connect(int(tag))
+            tags = " ".join(self.get_tag(int(tag)))
+        except ValueError as e:
+            self.main_question_connect(tag)
+            tags = " ".join(self.get_tag(tag))
 
-        self.main_question_connect(tag)
         self.view.setHtml(self.base_html
                           .replace("[replaced-site1]", self.question_list[1][0])
                           .replace("[replaced-site2]", self.question_list[2][0])
@@ -37,7 +48,7 @@ class Bridge(QObject):
                           .replace("[replaced-site3-title]", self.question_list[3][1])
                           .replace("[replaced-site4-title]", self.question_list[4][1])
                           .replace("[replaced-site5-title]", self.question_list[5][1])
-                          .replace("[replaced-tags]", tag)
+                          .replace("[replaced-tags]", tags)
                           )
 
 
