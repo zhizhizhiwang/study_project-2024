@@ -3,8 +3,9 @@ import os
 from PyQt6 import QtCore, QtWidgets, QtGui, QtWebChannel
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 import markdown
-from base import Questions, Calculator, RightBarWeb
+from question.base import Questions, Calculator, RightBarWeb, CenterMenu
 import logging
+from functools import singledispatch
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(levelname)s:%(message)s')
@@ -101,11 +102,14 @@ class HomeWindow(QtWidgets.QMainWindow):
         self.show_layout_h.addWidget(self.question_show, 3,
                                      QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignTop)
 
+        self.question_lib = Questions.QuestionsManager().load_lib(r"题型预测/question.json")
+
         """右侧栏目相关"""
         self.rightBar = QWebEngineView()
         self.bridge = RightBarWeb.Bridge()
         self.bridge.view = self.rightBar
         self.bridge.main_question_connect = self.load_question
+        self.bridge.get_tag = self.get_tag
 
         self.channel = QtWebChannel.QWebChannel()
         self.channel.registerObject('bridge', self.bridge)  # 注册对象到JavaScript
@@ -150,6 +154,7 @@ class HomeWindow(QtWidgets.QMainWindow):
 
         self.question_answer = None
         self.question_analysis = None
+        self.question_tags = []
         self.set_content("欢迎使用")
 
         """菜单"""
@@ -167,20 +172,46 @@ class HomeWindow(QtWidgets.QMainWindow):
         self.open_calculator.triggered.connect(self.calculator.show)
 
         self.menubar.addAction(self.open_calculator)
+        self.setCentralWidget(self.centralwidget)
 
     def set_content(self, md_text):
         """更新显示内容"""
         html = convert_to_html(md_text)
         self.question_show.setHtml(html)
 
-    def load_question(self, filename : str):
-        try:
-            question = Questions.Question().load_from_file(filename)
-            print(question.surface)
-            self.set_content(question.surface)
-            _, self.question_answer, self.question_analysis = question.unpack()
-        except Exception as e:
-            logger.error(f"加载题目文件失败{e}")
+    def load_question(self, filename : int | str):
+        if isinstance(filename, int):
+            question_input = self.question_lib[filename]
+            print(question_input.surface)
+            self.set_content(question_input.surface)
+            _, _, self.question_answer, self.question_analysis, self.question_tags = question_input.unpack()
+        elif isinstance(filename, str):
+            try:
+                question_input = Questions.Question().load_from_file(filename)
+                print(question_input.surface)
+                self.set_content(question_input.surface)
+                _, _, self.question_answer, self.question_analysis, self.question_tags = question_input.unpack()
+            except Exception as e:
+                logger.error(f"加载题目文件失败{e}")
+                logger.error(f"当前目录{os.getcwd()}")
+        else:
+            logger.error("load_question参数不匹配")
+
+    def get_tag(self, filename : int | str) -> list[str]:
+        if isinstance(filename, int):
+            question_input = self.question_lib[filename]
+            return question_input.tags
+        elif isinstance(filename, str):
+            try:
+                question_input = Questions.Question().load_from_file(filename)
+                return question_input.tags
+            except Exception as e:
+                logger.error(f"加载题目标签失败{e}")
+                logger.error(f"当前目录{os.getcwd()}")
+                return []
+        else:
+            logger.error("get_tag参数不匹配")
+            return []
 
     def check_answer(self):
         if self.question_answer is not None:
@@ -205,7 +236,7 @@ class HomeWindow(QtWidgets.QMainWindow):
         else:
             logger.error(f"加载题目失败, 选择了{filename}, {_}")
 
-    def rightBar_url_change(self, url : QtCore.QUrl):
+    def right_bar_url_change(self, url : QtCore.QUrl):
         site = url.toString()
         logger.debug(f"url: {site}")
         try:
@@ -215,10 +246,9 @@ class HomeWindow(QtWidgets.QMainWindow):
             self.rightBar.setHtml(open(r"./site/404.html", "r", encoding="utf-8").read().replace("[replaced-error-str]", e.__repr__()))
 
 
-
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = HomeWindow()
     window.show()
-    window.load_question(r"question/example_question.json")
+    window.bridge.handle_tag(r"question\example_question.json")
     sys.exit(app.exec())
