@@ -85,8 +85,6 @@ class MplCanvas(FigureCanvas):
                     a.append(current)
                 except Exception as e:
                     logger.error(f"计算通项时出错：{e}")
-
-
         else:
             logger.error("类型错误")
             return None
