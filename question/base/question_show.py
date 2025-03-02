@@ -190,7 +190,10 @@ class HomeWindow(QtWidgets.QMainWindow):
             _, _, self.question_answer, self.question_analysis, self.question_tags = question_input.unpack()
             same_tag_list : list[Questions.Question] = []
             for tag in question_input.tags:
-                same_tag_list += [q for _, q in self.question_lib.questions_dir.values() if tag in q.tags and q.question_id != question_input.question_id]
+                same_tag_list += \
+                    [q for _, q in self.question_lib.questions_dir.values()
+                     if tag in q.tags and
+                     q.question_id != question_input.question_id]
             for i in range(min(5, len(same_tag_list))):
                 self.bridge.question_list[i + 1] = [str(same_tag_list[i].question_id), " ".join(same_tag_list[i].tags)]
 
